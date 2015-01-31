@@ -2,6 +2,7 @@
 # Author:: Farzad FARID (<ffarid@pragmatic-source.com>)
 # Copyright:: Copyright (c) 2011-2012 Farzad FARID
 # License:: Simplified BSD License
+require 'base64'
 
 module Zabby
   class Connection
@@ -9,7 +10,7 @@ module Zabby
     JSONRPC_SCRIPT = "/api_jsonrpc.php"
 
     attr_reader :uri, :request_path, :user, :password, :proxy_host, :proxy_user, :proxy_password
-    attr_reader :auth
+    attr_reader :auth, :http_auth_required
     attr_reader :request_id
 
     def initialize
@@ -17,14 +18,14 @@ module Zabby
     end
 
     def reset
-      @uri = @user = @password = @proxy_host = @proxy_user = @proxy_password = nil
+      @uri = @user = @password = @proxy_host = @proxy_user = @proxy_password = @http_auth_required = nil
       @request_id = 0
       @auth = nil
     end
 
     def login(config)
       return @auth if @auth
-      
+      @http_auth_required = config.http_auth_required
       @uri = URI.parse(config.server)
       @user = config.user
       @password = config.password
@@ -91,6 +92,7 @@ module Zabby
     def request(message)
       req = Net::HTTP::Post.new(@request_path)
       req.add_field('Content-Type', 'application/json-rpc')
+      req.add_field('Authorization', 'Basic ' + Base64.encode64(@user + ':' + @password)) if @http_auth_required
       req.body = JSON.generate(message)
       req
     end
