@@ -2,7 +2,6 @@
 # Author:: Farzad FARID (<ffarid@pragmatic-source.com>)
 # Copyright:: Copyright (c) 2011-2012 Farzad FARID
 # License:: Simplified BSD License
-require 'base64'
 
 module Zabby
   class Connection
@@ -92,7 +91,7 @@ module Zabby
     def request(message)
       req = Net::HTTP::Post.new(@request_path)
       req.add_field('Content-Type', 'application/json-rpc')
-      req.add_field('Authorization', 'Basic ' + Base64.encode64(@user + ':' + @password)) if @http_auth_required
+      req.basic_auth(@user, @password) if @http_auth_required
       req.body = JSON.generate(message)
       req
     end
